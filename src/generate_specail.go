@@ -27,7 +27,35 @@ func (p *{{ .StructName }}) Set{{ .FieldName }}(value {{ .FieldType }}) {
 {{ end }}
 `
 
-//go:generate go run generate_specail.go TinyWrapSave
+var (
+	data        Data
+	specifyStr  string
+	inspectFunc func(n ast.Node) bool
+)
+
+func init() {
+	inspectFunc = func(n ast.Node) bool {
+		if ts, ok := n.(*ast.TypeSpec); ok {
+			if structType, ok := ts.Type.(*ast.StructType); ok {
+				structName := ts.Name.Name
+				if structName != specifyStr {
+					return true // 只处理指定结构体
+				}
+				for _, field := range structType.Fields.List {
+					for _, name := range field.Names {
+						data.Fields = append(data.Fields, Field{
+							StructName: structName,
+							FieldName:  name.Name,
+							FieldType:  typeInfo(field.Type), // 使用 typeInfo 函数
+						})
+					}
+				}
+			}
+		}
+		return true
+	}
+}
+
 type Field struct {
 	StructName string
 	FieldName  string
@@ -62,66 +90,44 @@ func main() {
 		return
 	}
 
-	structNameToGenerate := os.Args[1] // 获取命令行参数
+	specifyStr = os.Args[1] // 获取命令行参数
 
-	fset := token.NewFileSet()
-	node, err := parser.ParseDir(fset, ".", nil, parser.ParseComments)
+	fileSet := token.NewFileSet()
+	node, err := parser.ParseDir(fileSet, ".", nil, parser.ParseComments)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	var data Data
 
 	for pkgName, pkg := range node {
 		data.PackageName = pkgName // 提取包名
 		for _, file := range pkg.Files {
-			ast.Inspect(file, func(n ast.Node) bool {
-				ts, ok := n.(*ast.TypeSpec)
-				if ok {
-					structType, ok := ts.Type.(*ast.StructType)
-					if ok {
-						structName := ts.Name.Name
-						if structName != structNameToGenerate {
-							return true // 只处理指定结构体
-						}
-						for _, field := range structType.Fields.List {
-							for _, name := range field.Names {
-								data.Fields = append(data.Fields, Field{
-									StructName: structName,
-									FieldName:  name.Name,
-									FieldType:  typeInfo(field.Type), // 使用 typeInfo 函数
-								})
-							}
-						}
-					}
-				}
-				return true
-			})
+			ast.Inspect(file, inspectFunc)
 		}
 	}
 
 	if len(data.Fields) == 0 {
-		fmt.Println("No struct fields found for", structNameToGenerate)
+		fmt.Printf("*********************** No struct fields found for %v!", specifyStr)
 		return
 	}
 
-	outputFileName := fmt.Sprintf("accessor_%s.go", structNameToGenerate)
-	outputFile, err := os.Create(outputFileName)
-	//outputFile, err := os.Create("struct_accessor.go")
+	//设置指定的文件名并创建文件
+	outFile, err := os.Create(fmt.Sprintf("accessor_%s.go", specifyStr))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer func(outputFile *os.File) {
-		err := outputFile.Close()
-		if err != nil {
-
+	defer func(out *os.File) {
+		if err := out.Close(); err != nil {
+			fmt.Printf("out file close is fail err = %v\n", err)
 		}
-	}(outputFile)
+	}(outFile)
 
 	must := template.Must(template.New("methods").Parse(tmpl))
-	if err := must.Execute(outputFile, data); err != nil {
-		fmt.Println(err)
+	if err := must.Execute(outFile, data); err != nil {
+		fmt.Printf("out file Execute is fail err = %v\n", err)
+	} else {
+		fmt.Printf("\n generate struct %v's accessor is success !\n", specifyStr)
 	}
+	return
 }
