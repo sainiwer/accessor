@@ -5,6 +5,11 @@
 ###### /usr/local/bin 
 
 ### 2.add this line to source code 
-###### //go:generate  accessor_engine structName
-###### //go:generate go run ../accessor_engine.go structName get|set|anyother
-###### notice,结构体名字后面的操作是可选的，set|get|或者留空
+###### //go:generate  accessor_engine structName 
+<br>
+
+### 3.or add this line to source code 
+<br>
+
+###### //go:generate go run ../accessor_engine.go structName [get | set]
+### * the get/set is optional ,you can leave it blank, otherwise it will be the default

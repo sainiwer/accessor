@@ -115,10 +115,12 @@ func typeInfo(t ast.Expr) string {
 		return fmt.Sprintf("chan %s", typeInfo(expr.Value)) // 处理chan类型
 	}
 }
+
 func formatCode(filename string) error {
 	cmd := exec.Command("go", "fmt", filename)
 	return cmd.Run()
 }
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: go run generate.go <StructName>")
@@ -127,7 +129,7 @@ func main() {
 
 	specifyStr = os.Args[1] // 获取命令行参数
 
-	if len(os.Args) >= 3 {
+	if len(os.Args) == 3 {
 		operation = os.Args[2] //生成操作的指示 set,get none
 	}
 	fileSet := token.NewFileSet()
@@ -145,12 +147,13 @@ func main() {
 	}
 
 	if len(data.Fields) == 0 {
-		fmt.Printf("*********************** No struct fields found for %v!", specifyStr)
+		fmt.Printf("No struct fields found for %v!\n", specifyStr)
 		return
 	}
 
 	//设置指定的文件名并创建文件
-	outFile, err := os.Create(fmt.Sprintf("accessor_%s.go", specifyStr))
+	outFileName := fmt.Sprintf("accessor_%s.go", specifyStr)
+	outFile, err := os.Create(outFileName)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -161,6 +164,23 @@ func main() {
 		}
 	}(outFile)
 
+	templateOp := getOperationTemplate(operation)
+	must := template.Must(template.New("methods").Parse(templateOp))
+
+	if err := must.Execute(outFile, data); err != nil {
+		fmt.Printf("out file Execute is fail err = %v\n", err)
+		return
+	}
+	fmt.Printf("\n generate struct %v's accessor is success !\n", specifyStr)
+
+	// 运行 go fmt
+	if err = formatCode(outFileName); err != nil {
+		fmt.Println("格式化失败:", err)
+	}
+}
+
+// get the generated template based on command line parameters
+func getOperationTemplate(operation string) string {
 	var templateOp string
 	switch operation {
 	default:
@@ -170,19 +190,5 @@ func main() {
 	case "get":
 		templateOp = tmplGet
 	}
-	must := template.Must(template.New("methods").Parse(templateOp))
-	if err := must.Execute(outFile, data); err != nil {
-		fmt.Printf("out file Execute is fail err = %v\n", err)
-	} else {
-		fmt.Printf("\n generate struct %v's accessor is success !\n", specifyStr)
-	}
-
-	// 运行 go fmt
-	err = formatCode(fmt.Sprintf("accessor_%s.go", specifyStr))
-	if err != nil {
-		fmt.Println("格式化失败:", err)
-		return
-	}
-
-	return
+	return templateOp
 }
