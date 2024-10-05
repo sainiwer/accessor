@@ -2,7 +2,7 @@ package example
 
 //go:generate  accessor_engine Station
 
-//go:generate go run ../generate_specail.go Gs
+//go:generate go run ../accessor_engine.go Gs
 type Gs struct {
 	Name string
 }

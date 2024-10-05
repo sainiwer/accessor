@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"os/exec"
 	"text/template"
 )
 
@@ -83,7 +84,10 @@ func typeInfo(t ast.Expr) string {
 		return fmt.Sprintf("%s", t) // 返回原始表达式
 	}
 }
-
+func formatCode(filename string) error {
+	cmd := exec.Command("go", "fmt", filename)
+	return cmd.Run()
+}
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: go run generate.go <StructName>")
@@ -129,5 +133,13 @@ func main() {
 	} else {
 		fmt.Printf("\n generate struct %v's accessor is success !\n", specifyStr)
 	}
+
+	// 运行 go fmt
+	err = formatCode(fmt.Sprintf("accessor_%s.go", specifyStr))
+	if err != nil {
+		fmt.Println("格式化失败:", err)
+		return
+	}
+
 	return
 }
