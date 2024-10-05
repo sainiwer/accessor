@@ -1,6 +1,7 @@
 package example
 
-//go:generate go run ../generate.go
+//go:generate  accessor_enginery Station
+
 //go:generate go run ../generate_specail.go Gs
 type Gs struct {
 	Name string
