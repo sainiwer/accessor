@@ -8,14 +8,6 @@ func (p *Station) GetVV() chan int64 {
 	return p.VV
 }
 
-func (p *Station) SetVV(value chan int64) {
-	p.VV = value
-}
-
 func (p *Station) GetBB() chan *ss.HHH {
 	return p.BB
-}
-
-func (p *Station) SetBB(value chan *ss.HHH) {
-	p.BB = value
 }
