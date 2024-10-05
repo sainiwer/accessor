@@ -1,6 +1,6 @@
 package example
 
-//go:generate  accessor_enginery Station
+//go:generate  accessor_engine Station
 
 //go:generate go run ../generate_specail.go Gs
 type Gs struct {
