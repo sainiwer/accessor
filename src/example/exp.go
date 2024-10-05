@@ -1,14 +1,10 @@
 package example
 
-//go:generate  accessor_engine Station
+import "accessor/src/ss"
 
-//go:generate go run ../accessor_engine.go Gs
-type Gs struct {
-	Name string
-}
+//go:generate go run ../accessor_engine.go Station
 
-//go:generate go run ../generate_specail.go Station
 type Station struct {
-	Exp  int
-	Name string
+	VV chan int64
+	BB chan *ss.HHH
 }

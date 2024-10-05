@@ -2,20 +2,20 @@
 
 package example
 
+import "accessor/src/ss"
 
-func (p *Station) GetExp() int {
-    return p.Exp
+func (p *Station) GetVV() chan int64 {
+	return p.VV
 }
 
-func (p *Station) SetExp(value int) {
-    p.Exp = value
+func (p *Station) SetVV(value chan int64) {
+	p.VV = value
 }
 
-func (p *Station) GetName() string {
-    return p.Name
+func (p *Station) GetBB() chan *ss.HHH {
+	return p.BB
 }
 
-func (p *Station) SetName(value string) {
-    p.Name = value
+func (p *Station) SetBB(value chan *ss.HHH) {
+	p.BB = value
 }
-

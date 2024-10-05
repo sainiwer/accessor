@@ -80,6 +80,8 @@ func typeInfo(t ast.Expr) string {
 		return fmt.Sprintf("map[%s]%s", typeInfo(expr.Key), typeInfo(expr.Value))
 	case *ast.StarExpr: // 处理指针类型
 		return fmt.Sprintf("*%s", typeInfo(expr.X))
+	case *ast.ChanType:
+		return fmt.Sprintf("chan %s", typeInfo(expr.Value)) // 只处理chan类型
 	default:
 		return fmt.Sprintf("%s", t) // 返回原始表达式
 	}
